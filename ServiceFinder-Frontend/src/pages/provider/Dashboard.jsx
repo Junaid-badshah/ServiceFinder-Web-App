@@ -21,7 +21,7 @@ function Dashboard() {
     try {
       const provRes = await api.get('/providers');
       const myProvider = (provRes.data || []).find(
-        (p) => p.userId === user.id
+          (p) => p.userId === user.id
       );
 
       if (!myProvider) {
@@ -96,10 +96,10 @@ function Dashboard() {
   const rejected = requests.filter((r) => (r.status || '').toUpperCase() === 'REJECTED').length;
 
   const StatCard = ({ label, value, color }) => (
-    <div className={`rounded-xl p-4 border-2 ${color} bg-white dark:bg-gray-800`}>
-      <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-      <p className="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1">{value}</p>
-    </div>
+      <div className={`rounded-xl p-4 border-2 ${color} bg-white dark:bg-gray-800`}>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1">{value}</p>
+      </div>
   );
 
   const formatTime = (t) => {
@@ -111,37 +111,28 @@ function Dashboard() {
     return `${hr12}:${m} ${ampm}`;
   };
 
-  const timeAgo = (ts) => {
-    if (!ts) return '-';
-    const now = new Date();
-    const tsWithTZ =
-      typeof ts === 'string' && !ts.includes('Z') && !ts.includes('+')
-        ? ts + 'Z'
-        : ts;
-    const past = new Date(tsWithTZ);
-    const diffMs = now - past;
-    if (diffMs < 0) return 'just now';
-    const mins = Math.floor(diffMs / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return mins + ' min ago';
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return hours + ' hr ago';
-    const days = Math.floor(hours / 24);
-    if (days < 7) return days + ' day' + (days > 1 ? 's' : '') + ' ago';
-    return past.toLocaleDateString();
-  };
-
+  // ============================================
+  // EXACT DATE & TIME (Yeh ab use hoga)
+  // ============================================
   const fullTimestamp = (ts) => {
     if (!ts) return '-';
-    const tsWithTZ =
-      typeof ts === 'string' && !ts.includes('Z') && !ts.includes('+')
-        ? ts + 'Z'
-        : ts;
-    const d = new Date(tsWithTZ);
-    return d.toLocaleString('en-PK', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
+    try {
+      const tsWithTZ =
+          typeof ts === 'string' && !ts.includes('Z') && !ts.includes('+')
+              ? ts + 'Z'
+              : ts;
+      const d = new Date(tsWithTZ);
+      return d.toLocaleString('en-PK', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+    } catch (err) {
+      return '-';
+    }
   };
 
   const LOCATION_TYPE_LABELS = {
@@ -152,159 +143,153 @@ function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold text-primary-600 dark:text-primary-500 mb-6">
-          Provider Dashboard
-        </h1>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-3xl font-bold text-primary-600 dark:text-primary-500 mb-6">
+            Provider Dashboard
+          </h1>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <StatCard label="Total" value={total} color="border-gray-300 dark:border-gray-700" />
-          <StatCard label="Pending" value={pending} color="border-yellow-500" />
-          <StatCard label="Accepted" value={accepted} color="border-green-500" />
-          <StatCard label="Rejected" value={rejected} color="border-red-500" />
-        </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <StatCard label="Total" value={total} color="border-gray-300 dark:border-gray-700" />
+            <StatCard label="Pending" value={pending} color="border-yellow-500" />
+            <StatCard label="Accepted" value={accepted} color="border-green-500" />
+            <StatCard label="Rejected" value={rejected} color="border-red-500" />
+          </div>
 
-        <div className="flex gap-2 mb-6 flex-wrap">
-          {['ALL', 'PENDING', 'ACCEPTED', 'REJECTED'].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${
-                filter === f
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
+          <div className="flex gap-2 mb-6 flex-wrap">
+            {['ALL', 'PENDING', 'ACCEPTED', 'REJECTED'].map((f) => (
+                <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${
+                        filter === f
+                            ? 'bg-primary-600 text-white'
+                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                >
+                  {f}
+                </button>
+            ))}
+          </div>
 
-        {loading && <p className="text-center text-gray-500 py-10">Loading...</p>}
+          {loading && <p className="text-center text-gray-500 py-10">Loading...</p>}
 
-        {!loading && filtered.length === 0 && (
-          <p className="text-center text-gray-500 py-10">No requests found</p>
-        )}
+          {!loading && filtered.length === 0 && (
+              <p className="text-center text-gray-500 py-10">No requests found</p>
+          )}
 
-        <div className="space-y-4">
-          {filtered.map((r) => {
-            const st = (r.status || '').toUpperCase();
-            const statusColor =
-              st === 'ACCEPTED'
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                : st === 'PENDING'
-                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+          <div className="space-y-4">
+            {filtered.map((r) => {
+              const st = (r.status || '').toUpperCase();
+              const statusColor =
+                  st === 'ACCEPTED'
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      : st === 'PENDING'
+                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
 
-            // NEW badge sirf agar:
-            // 1. Status PENDING
-            // 2. Is request ki ID seen list mein nahi
-            const isNew = st === 'PENDING' && !seenIds.includes(r.id);
+              const isNew = st === 'PENDING' && !seenIds.includes(r.id);
 
-            return (
-              <div
-                key={r.id}
-                className={`bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-2 transition-all ${
-                  isNew
-                    ? 'border-green-400 ring-2 ring-green-200 dark:ring-green-900'
-                    : 'border-transparent'
-                }`}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                      Request #{r.id}
-                      {isNew && (
-                        <span className="bg-green-400 text-green-900 text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
+              return (
+                  <div
+                      key={r.id}
+                      className={`bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-2 transition-all ${
+                          isNew
+                              ? 'border-green-400 ring-2 ring-green-200 dark:ring-green-900'
+                              : 'border-transparent'
+                      }`}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                          Request #{r.id}
+                          {isNew && (
+                              <span className="bg-green-400 text-green-900 text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
                           🆕 NEW
                         </span>
-                      )}
-                    </h3>
-                    <p className="text-xs text-gray-500">
-                      Provider: {r.provider?.name || '-'} — {r.provider?.service || '-'}
-                    </p>
-                    {r.createdAt && (
-                      <p
-                        className="text-xs text-primary-600 dark:text-primary-400 font-medium mt-0.5"
-                        title={fullTimestamp(r.createdAt)}
-                      >
-                        🕒 Request aya: {timeAgo(r.createdAt)}
-                      </p>
-                    )}
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}>
+                          )}
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                          Provider: {r.provider?.name || '-'} — {r.provider?.service || '-'}
+                        </p>
+                        {r.createdAt && (
+                            <p className="text-xs text-primary-600 dark:text-primary-400 font-medium mt-0.5">
+                              🕒 Request aya: {fullTimestamp(r.createdAt)}
+                            </p>
+                        )}
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}>
                     {st}
                   </span>
-                </div>
+                    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400 mb-3">
-                  <p>Customer: <strong>{r.user?.name || '-'}</strong></p>
-                  <p>Email: {r.user?.email || '-'}</p>
-                  <p>Phone: {r.user?.phone || '-'}</p>
-                  <p>📅 Date: {r.preferredDate || '-'}</p>
-                  <p>🕐 Time: <strong>{formatTime(r.preferredTime)}</strong></p>
-                  {r.locationType && (
-                    <p>🏠 Type: <strong>{LOCATION_TYPE_LABELS[r.locationType] || r.locationType}</strong></p>
-                  )}
-                  {r.location && (
-                    <p className="md:col-span-2">
-                      📍 <strong>Customer Location:</strong>{' '}
-                      <span className="text-primary-600 dark:text-primary-400 font-semibold">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      <p>Customer: <strong>{r.user?.name || '-'}</strong></p>
+                      <p>Email: {r.user?.email || '-'}</p>
+                      <p>Phone: {r.user?.phone || '-'}</p>
+                      <p>📅 Date: {r.preferredDate || '-'}</p>
+                      <p>🕐 Time: <strong>{formatTime(r.preferredTime)}</strong></p>
+                      {r.locationType && (
+                          <p>🏠 Type: <strong>{LOCATION_TYPE_LABELS[r.locationType] || r.locationType}</strong></p>
+                      )}
+                      {r.location && (
+                          <p className="md:col-span-2">
+                            📍 <strong>Customer Location:</strong>{' '}
+                            <span className="text-primary-600 dark:text-primary-400 font-semibold">
                         {r.location}
                       </span>
-                    </p>
-                  )}
-                  {r.locationNote && (
-                    <p className="md:col-span-2">
-                      📝 <strong>Note:</strong> {r.locationNote}
-                    </p>
-                  )}
-                </div>
+                          </p>
+                      )}
+                      {r.locationNote && (
+                          <p className="md:col-span-2">
+                            📝 <strong>Note:</strong> {r.locationNote}
+                          </p>
+                      )}
+                    </div>
 
-                {r.message && (
-                  <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-3">
-                    {r.message}
-                  </p>
-                )}
+                    {r.message && (
+                        <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-3">
+                          {r.message}
+                        </p>
+                    )}
 
-                <div className="flex gap-2 flex-wrap">
-                  {st === 'PENDING' ? (
-                    <>
+                    <div className="flex gap-2 flex-wrap">
+                      {st === 'PENDING' ? (
+                          <>
+                            <button
+                                onClick={() => updateStatus(r.id, 'ACCEPTED')}
+                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition"
+                            >
+                              Accept
+                            </button>
+                            <button
+                                onClick={() => updateStatus(r.id, 'REJECTED')}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition"
+                            >
+                              Reject
+                            </button>
+                          </>
+                      ) : (
+                          <button
+                              onClick={() => updateStatus(r.id, 'PENDING')}
+                              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-semibold transition"
+                          >
+                            Mark Pending
+                          </button>
+                      )}
                       <button
-                        onClick={() => updateStatus(r.id, 'ACCEPTED')}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition"
+                          onClick={() => deleteRequest(r.id)}
+                          className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-semibold transition ml-auto"
                       >
-                        Accept
+                        Delete
                       </button>
-                      <button
-                        onClick={() => updateStatus(r.id, 'REJECTED')}
-                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition"
-                      >
-                        Reject
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => updateStatus(r.id, 'PENDING')}
-                      className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-semibold transition"
-                    >
-                      Mark Pending
-                    </button>
-                  )}
-                  <button
-                    onClick={() => deleteRequest(r.id)}
-                    className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-semibold transition ml-auto"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+                    </div>
+                  </div>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </div>
   );
 }
 

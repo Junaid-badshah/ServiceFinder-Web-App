@@ -1,8 +1,8 @@
 package com.servicefinder.controller;
 
 import com.servicefinder.entity.Provider;
-import com.servicefinder.repository.ProviderRepository;
 import com.servicefinder.repository.ServiceRequestRepository;
+import com.servicefinder.service.ProviderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,7 +18,7 @@ import java.util.Map;
 public class ProviderController {
 
     @Autowired
-    private ProviderRepository providerRepository;
+    private ProviderService providerService;
 
     @Autowired
     private ServiceRequestRepository serviceRequestRepository;
@@ -27,7 +27,14 @@ public class ProviderController {
     public ResponseEntity<List<Provider>> getAll(
             @RequestParam(required = false) String service,
             @RequestParam(required = false) String location) {
-        List<Provider> all = providerRepository.findAll();
+
+        // Agar filter nahi hai to cached list use karo
+        if ((service == null || service.isEmpty()) && (location == null || location.isEmpty())) {
+            return ResponseEntity.ok(providerService.getAllProviders());
+        }
+
+        // Filter hai to full list cache se lo, phir filter karo
+        List<Provider> all = providerService.getAllProviders();
         if (service != null && !service.isEmpty()) {
             all = all.stream().filter(p -> p.getService() != null &&
                     p.getService().toLowerCase().contains(service.toLowerCase())).toList();
@@ -41,29 +48,17 @@ public class ProviderController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Provider> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(providerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Provider not found")));
+        return ResponseEntity.ok(providerService.getProviderById(id));
     }
 
     @PostMapping
     public ResponseEntity<Provider> create(@RequestBody Provider provider) {
-        return ResponseEntity.ok(providerRepository.save(provider));
+        return ResponseEntity.ok(providerService.createProvider(provider));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Provider> update(@PathVariable Long id, @RequestBody Provider updated) {
-        Provider p = providerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Provider not found"));
-        p.setName(updated.getName());
-        p.setService(updated.getService());
-        p.setLocation(updated.getLocation());
-        p.setExperience(updated.getExperience());
-        p.setRate(updated.getRate());
-        p.setPhone(updated.getPhone());
-        p.setDescription(updated.getDescription());
-        p.setAvailableDays(updated.getAvailableDays());
-        p.setAvailableTime(updated.getAvailableTime());
-        return ResponseEntity.ok(providerRepository.save(p));
+        return ResponseEntity.ok(providerService.updateProvider(id, updated));
     }
 
     // CASCADE DELETE — Provider + uski saari requests
@@ -74,7 +69,7 @@ public class ProviderController {
         List<com.servicefinder.entity.ServiceRequest> reqs =
                 serviceRequestRepository.findByProvider_Id(id);
         serviceRequestRepository.deleteAll(reqs);
-        providerRepository.deleteById(id);
+        providerService.deleteProvider(id);
         return ResponseEntity.ok(Map.of(
                 "message", "Provider deleted",
                 "requestsDeleted", reqs.size()

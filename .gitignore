@@ -18,3 +18,5 @@ target/
 # OS
 .DS_Store
 *.log
+ServiceFinder-Backend/.idea/
+ServiceFinder-Frontend/.idea/

@@ -9,7 +9,11 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 
 @Entity
-@Table(name = "service_requests")
+@Table(name = "service_requests", indexes = {
+        @Index(name = "idx_status", columnList = "status"),
+        @Index(name = "idx_provider_status", columnList = "provider_id, status"),
+        @Index(name = "idx_user_id_sr", columnList = "user_id")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
