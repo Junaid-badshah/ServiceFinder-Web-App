@@ -20,17 +20,28 @@ function Dashboard() {
     setLoading(true);
     try {
       const provRes = await api.get('/providers');
-      const myProvider = (provRes.data || []).find(
+      // ✅ FILTER — user ke SAARE providers lo (sirf pehla nahi)
+      const myProviders = (provRes.data || []).filter(
           (p) => p.userId === user.id
       );
 
-      if (!myProvider) {
+      if (myProviders.length === 0) {
         setRequests([]);
         return;
       }
 
-      const reqRes = await api.get(`/requests/provider/${myProvider.id}`);
-      const sorted = (reqRes.data || []).sort((a, b) => {
+      // ✅ Har provider ke requests alag alag lao aur combine karo
+      const allRequests = [];
+      for (const mp of myProviders) {
+        try {
+          const reqRes = await api.get(`/requests/provider/${mp.id}`);
+          allRequests.push(...(reqRes.data || []));
+        } catch (err) {
+          console.error(`Failed to load requests for provider ${mp.id}`, err);
+        }
+      }
+
+      const sorted = allRequests.sort((a, b) => {
         const aPending = (a.status || '').toUpperCase() === 'PENDING' ? 1 : 0;
         const bPending = (b.status || '').toUpperCase() === 'PENDING' ? 1 : 0;
         if (aPending !== bPending) return bPending - aPending;
@@ -112,16 +123,12 @@ function Dashboard() {
   };
 
   // ============================================
-  // EXACT DATE & TIME (Yeh ab use hoga)
+  // EXACT DATE & TIME (FIXED - No timezone offset)
   // ============================================
   const fullTimestamp = (ts) => {
     if (!ts) return '-';
     try {
-      const tsWithTZ =
-          typeof ts === 'string' && !ts.includes('Z') && !ts.includes('+')
-              ? ts + 'Z'
-              : ts;
-      const d = new Date(tsWithTZ);
+      const d = new Date(ts);
       return d.toLocaleString('en-PK', {
         day: '2-digit',
         month: 'short',
