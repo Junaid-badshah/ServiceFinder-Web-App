@@ -20,3 +20,4 @@ target/
 *.log
 ServiceFinder-Backend/.idea/
 ServiceFinder-Frontend/.idea/
+**/application.properties
