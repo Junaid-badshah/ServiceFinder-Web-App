@@ -54,4 +54,37 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) {
+        String token = body.get("token");
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Token required"));
+        }
+        try {
+            return ResponseEntity.ok(authService.googleLogin(token));
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/register-email")
+    public ResponseEntity<?> registerWithEmail(@RequestBody Map<String, String> payload) {
+        try {
+            return ResponseEntity.ok(authService.registerWithEmail(payload));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password-email")
+    public ResponseEntity<?> resetPasswordWithEmail(@RequestBody Map<String, String> payload) {
+        try {
+            String email = payload.get("email");
+            String newPassword = payload.get("newPassword");
+            return ResponseEntity.ok(authService.resetPasswordWithEmail(email, newPassword));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

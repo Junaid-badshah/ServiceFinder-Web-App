@@ -7,6 +7,8 @@ import { useAuth } from './context/AuthContext';
 import Login from './pages/auth/Login';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import RegisterCustomer from './pages/auth/RegisterCustomer';
+import RegisterCustomerEmail from './pages/auth/RegisterCustomerEmail';
+import RegisterCustomerPhone from './pages/auth/RegisterCustomerPhone';
 import RegisterProvider from './pages/auth/RegisterProvider';
 
 // CUSTOMER
@@ -29,80 +31,90 @@ function AppContent() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      {user && <Navbar />}
-      <Routes>
-        <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login />} />
-        <Route path="/forgot-password" element={user ? <Navigate to="/home" replace /> : <ForgotPassword />} />
-        <Route path="/register-customer" element={user ? <Navigate to="/home" replace /> : <RegisterCustomer />} />
-        <Route path="/register-provider" element={user ? <Navigate to="/home" replace /> : <RegisterProvider />} />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+        {user && <Navbar />}
+        <Routes>
+          {/* ===== AUTH ROUTES ===== */}
+          <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login />} />
+          <Route path="/forgot-password" element={user ? <Navigate to="/home" replace /> : <ForgotPassword />} />
 
-        <Route path="/home" element={
-          <ProtectedRoute allowedRoles={['CUSTOMER', 'PROVIDER', 'ADMIN']}>
-            <Home />
-          </ProtectedRoute>
-        } />
-        <Route path="/providers" element={
-          <ProtectedRoute allowedRoles={['CUSTOMER', 'PROVIDER', 'ADMIN']}>
-            <Providers />
-          </ProtectedRoute>
-        } />
-        <Route path="/providers/:id" element={
-          <ProtectedRoute allowedRoles={['CUSTOMER', 'PROVIDER', 'ADMIN']}>
-            <ProviderDetails />
-          </ProtectedRoute>
-        } />
-        <Route path="/request-service/:providerId" element={
-          <ProtectedRoute allowedRoles={['CUSTOMER', 'PROVIDER', 'ADMIN']}>
-            <RequestService />
-          </ProtectedRoute>
-        } />
-        <Route path="/my-requests" element={
-          <ProtectedRoute allowedRoles={['CUSTOMER', 'PROVIDER', 'ADMIN']}>
-            <MyRequests />
-          </ProtectedRoute>
-        } />
+          {/* Customer Registration - Choice Page */}
+          <Route path="/register-customer" element={user ? <Navigate to="/home" replace /> : <RegisterCustomer />} />
+          <Route path="/register/customer" element={user ? <Navigate to="/home" replace /> : <RegisterCustomer />} />
+          <Route path="/register/customer/email" element={user ? <Navigate to="/home" replace /> : <RegisterCustomerEmail />} />
+          <Route path="/register/customer/phone" element={user ? <Navigate to="/home" replace /> : <RegisterCustomerPhone />} />
 
-        <Route path="/dashboard" element={
-          <ProtectedRoute allowedRoles={['PROVIDER', 'ADMIN']}>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/add-provider" element={
-          <ProtectedRoute allowedRoles={['PROVIDER', 'ADMIN']}>
-            <AddProvider />
-          </ProtectedRoute>
-        } />
-        <Route path="/edit-provider/:id" element={
-          <ProtectedRoute allowedRoles={['PROVIDER', 'ADMIN']}>
-            <EditProvider />
-          </ProtectedRoute>
-        } />
+          {/* Provider Registration */}
+          <Route path="/register-provider" element={user ? <Navigate to="/home" replace /> : <RegisterProvider />} />
 
-        <Route path="/profile" element={
-          <ProtectedRoute allowedRoles={['CUSTOMER', 'PROVIDER', 'ADMIN']}>
-            <Profile />
-          </ProtectedRoute>
-        } />
+          {/* ===== PROTECTED ROUTES ===== */}
+          <Route path="/home" element={
+            <ProtectedRoute allowedRoles={['CUSTOMER', 'PROVIDER', 'ADMIN']}>
+              <Home />
+            </ProtectedRoute>
+          } />
+          <Route path="/providers" element={
+            <ProtectedRoute allowedRoles={['CUSTOMER', 'PROVIDER', 'ADMIN']}>
+              <Providers />
+            </ProtectedRoute>
+          } />
+          <Route path="/providers/:id" element={
+            <ProtectedRoute allowedRoles={['CUSTOMER', 'PROVIDER', 'ADMIN']}>
+              <ProviderDetails />
+            </ProtectedRoute>
+          } />
+          <Route path="/request-service/:providerId" element={
+            <ProtectedRoute allowedRoles={['CUSTOMER', 'PROVIDER', 'ADMIN']}>
+              <RequestService />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-requests" element={
+            <ProtectedRoute allowedRoles={['CUSTOMER', 'PROVIDER', 'ADMIN']}>
+              <MyRequests />
+            </ProtectedRoute>
+          } />
 
-        <Route path="/admin" element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <AdminPanel />
-          </ProtectedRoute>
-        } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute allowedRoles={['PROVIDER', 'ADMIN']}>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/add-provider" element={
+            <ProtectedRoute allowedRoles={['PROVIDER', 'ADMIN']}>
+              <AddProvider />
+            </ProtectedRoute>
+          } />
+          <Route path="/edit-provider/:id" element={
+            <ProtectedRoute allowedRoles={['PROVIDER', 'ADMIN']}>
+              <EditProvider />
+            </ProtectedRoute>
+          } />
 
-        <Route path="/" element={<Navigate to={user ? '/home' : '/login'} replace />} />
-        <Route path="*" element={<Navigate to={user ? '/home' : '/login'} replace />} />
-      </Routes>
-    </div>
+          <Route path="/profile" element={
+            <ProtectedRoute allowedRoles={['CUSTOMER', 'PROVIDER', 'ADMIN']}>
+              <Profile />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminPanel />
+            </ProtectedRoute>
+          } />
+
+          {/* ===== DEFAULT ROUTES ===== */}
+          <Route path="/" element={<Navigate to={user ? '/home' : '/login'} replace />} />
+          <Route path="*" element={<Navigate to={user ? '/home' : '/login'} replace />} />
+        </Routes>
+      </div>
   );
 }
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
   );
 }
 

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -204,6 +205,132 @@ public class AuthService {
                 savedUser.getEmail(),
                 savedUser.getPhone(),
                 savedUser.getRole().name(),
+                token,
+                permissions
+        );
+    }
+
+    // ============================================
+    // GOOGLE LOGIN
+    // ============================================
+    @Transactional
+    public Map<String, Object> googleLogin(String idToken) throws Exception {
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier verifier =
+                new com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier.Builder(
+                        new com.google.api.client.http.javanet.NetHttpTransport(),
+                        com.google.api.client.json.gson.GsonFactory.getDefaultInstance()
+                )
+                        .setAudience(java.util.Collections.singletonList(
+                                "664522282956-913rl02hatcu2ogq8dk198uji4ebfc89.apps.googleusercontent.com"
+                        ))
+                        .build();
+
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken googleIdToken =
+                verifier.verify(idToken);
+
+        if (googleIdToken == null) {
+            throw new RuntimeException("Invalid Google token");
+        }
+
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload =
+                googleIdToken.getPayload();
+        String email = payload.getEmail();
+        String name = (String) payload.get("name");
+
+        if (email == null) throw new RuntimeException("Email not found in Google token");
+
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            user = new User();
+            user.setName(name != null ? name : email.split("@")[0]);
+            user.setEmail(email);
+            user.setPhone("");
+            user.setPassword("");
+            user.setRole(Role.CUSTOMER);
+            user = userRepository.save(user);
+        }
+
+        String jwtToken = jwtService.generateToken(user);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", user.getId());
+        result.put("name", user.getName());
+        result.put("email", user.getEmail());
+        result.put("phone", user.getPhone());
+        result.put("role", user.getRole().name());
+        result.put("token", jwtToken);
+        return result;
+    }
+
+    // ============================================
+    // REGISTER WITH EMAIL (Email OTP verified)
+    // ============================================
+    @Transactional
+    public AuthResponse registerWithEmail(Map<String, String> payload) {
+        String email = payload.get("email");
+        String name = payload.get("name");
+        String password = payload.get("password");
+
+        if (email == null || email.isEmpty()) throw new RuntimeException("Email required");
+        if (password == null || password.length() < 4) {
+            throw new RuntimeException("Password must be at least 4 characters");
+        }
+
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("Email already registered");
+        }
+
+        User user = new User();
+        user.setName(name != null ? name : email.split("@")[0]);
+        user.setEmail(email);
+        user.setPhone("");
+        user.setPassword(password);
+        user.setRole(Role.CUSTOMER);
+        User saved = userRepository.save(user);
+
+        String token = jwtService.generateToken(saved);
+        List<String> permissions = RolePermissions.getPermissions(saved.getRole())
+                .stream().map(Enum::name).toList();
+
+        return new AuthResponse(
+                saved.getId(),
+                saved.getName(),
+                saved.getEmail(),
+                saved.getPhone(),
+                saved.getRole().name(),
+                token,
+                permissions
+        );
+    }
+
+    // ============================================
+    // RESET PASSWORD WITH EMAIL (Email OTP verified)
+    // ============================================
+    @Transactional
+    public AuthResponse resetPasswordWithEmail(String email, String newPassword) {
+        if (email == null || newPassword == null || newPassword.trim().isEmpty()) {
+            throw new RuntimeException("Email and new password required");
+        }
+        if (newPassword.length() < 4) {
+            throw new RuntimeException("Password must be at least 4 characters");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setPassword(newPassword);
+        User saved = userRepository.save(user);
+
+        String token = jwtService.generateToken(saved);
+        List<String> permissions = RolePermissions.getPermissions(saved.getRole())
+                .stream().map(Enum::name).toList();
+
+        return new AuthResponse(
+                saved.getId(),
+                saved.getName(),
+                saved.getEmail(),
+                saved.getPhone(),
+                saved.getRole().name(),
                 token,
                 permissions
         );

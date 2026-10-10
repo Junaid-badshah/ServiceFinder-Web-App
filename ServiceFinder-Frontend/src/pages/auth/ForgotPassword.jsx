@@ -5,9 +5,8 @@ import PasswordInput from '../../components/auth/PasswordInput';
 
 function ForgotPassword() {
   const [step, setStep] = useState(1);
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
-  const [demoOtp, setDemoOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,18 +21,17 @@ function ForgotPassword() {
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
-    if (!phone) { setError('Please enter phone number'); return; }
+    if (!email || !email.includes('@')) { setError('Please enter valid email'); return; }
     setError(''); setSuccess(''); setLoading(true);
     try {
-      const res = await fetch('http://localhost:8081/api/otp/send', {
+      const res = await fetch('http://localhost:8081/api/otp/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ email }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
-      setDemoOtp(data.demoOtp || '');
-      setSuccess('OTP sent! Check the yellow hint below.');
+      setSuccess('OTP sent! Check your email inbox (aur spam folder bhi).');
       setStep(2);
     } catch (err) {
       setError(err.message);
@@ -47,14 +45,14 @@ function ForgotPassword() {
     if (!otp) { setError('Please enter OTP'); return; }
     setError(''); setLoading(true);
     try {
-      const res = await fetch('http://localhost:8081/api/otp/verify', {
+      const res = await fetch('http://localhost:8081/api/otp/verify-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, otp }),
+        body: JSON.stringify({ email, otp }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Invalid OTP');
-      setSuccess('Phone verified! Ab naya password set karo.');
+      setSuccess('Email verified! Ab naya password set karo.');
       setStep(3);
     } catch (err) {
       setError(err.message);
@@ -69,10 +67,10 @@ function ForgotPassword() {
     if (newPassword !== confirmPassword) { setError('Passwords do not match'); return; }
     setError(''); setLoading(true);
     try {
-      const res = await fetch('http://localhost:8081/api/auth/reset-password', {
+      const res = await fetch('http://localhost:8081/api/auth/reset-password-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, newPassword }),
+        body: JSON.stringify({ email, newPassword }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Reset failed');
@@ -99,8 +97,8 @@ function ForgotPassword() {
             🔑 Forgot Password
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2">
-            {step === 1 && 'Enter your phone number'}
-            {step === 2 && 'Enter the OTP'}
+            {step === 1 && 'Enter your email address'}
+            {step === 2 && 'Enter the OTP from your email'}
             {step === 3 && 'Set a new password'}
           </p>
         </div>
@@ -135,14 +133,14 @@ function ForgotPassword() {
         {step === 1 && (
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div>
-              <label className={labelClass}>Phone Number *</label>
-              <input type="tel" required value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className={inputClass} placeholder="0300-1234567" />
+              <label className={labelClass}>Email Address *</label>
+              <input type="email" required value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={inputClass} placeholder="ali@example.com" />
             </div>
             <button type="submit" disabled={loading}
               className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-lg font-semibold disabled:opacity-50 transition">
-              {loading ? 'Sending OTP...' : 'Send OTP'}
+              {loading ? 'Sending OTP...' : 'Send OTP to Email'}
             </button>
           </form>
         )}
@@ -154,11 +152,9 @@ function ForgotPassword() {
               <input type="text" required value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 className={inputClass} placeholder="6-digit code" maxLength={6} />
-              {demoOtp && (
-                <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
-                  💡 Dev Mode — OTP: <strong className="font-mono">{demoOtp}</strong>
-                </p>
-              )}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                📧 Check your email inbox (aur spam folder bhi)
+              </p>
             </div>
             <button type="submit" disabled={loading}
               className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-lg font-semibold disabled:opacity-50 transition">
@@ -166,7 +162,7 @@ function ForgotPassword() {
             </button>
             <button type="button" onClick={() => setStep(1)}
               className="w-full text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-              ← Change phone number
+              ← Change email address
             </button>
           </form>
         )}
