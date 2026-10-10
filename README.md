@@ -45,7 +45,67 @@ A full-stack service booking platform connecting customers with service provider
 
 ## Quick Start (Docker Compose) 🚀
 
-**Ek command mein poora stack chalayein:**
+**Teen aasan commands mein poora stack chalayein:**
+
+### Step 1: Repository Clone Karein
+
+\`\`\`bash
+git clone https://github.com/Junaid-badshah/ServiceFinder-Web-App.git
+cd ServiceFinder-Web-App
+\`\`\`
+
+### Step 2: Docker Compose Se Chalayein
+
+\`\`\`bash
+sudo docker compose up -d
+\`\`\`
+
+Wait karein 1-2 minutes (services start hone tak)
+
+### Step 3: Browser Mein UI Dekhein
+
+**Ab apne browser mein khol lein:**
+
+\`\`\`
+http://localhost:5173
+\`\`\`
+
+Ya terminal mein yeh chalayein (auto-open):
+
+**Linux:**
+\`\`\`bash
+xdg-open http://localhost:5173
+\`\`\`
+
+**Mac:**
+\`\`\`bash
+open http://localhost:5173
+\`\`\`
+
+**Windows (PowerShell):**
+\`\`\`powershell
+Start-Process http://localhost:5173
+\`\`\`
+
+### Step 4: Login Karein
+
+| Role | Email | Password |
+|------|-------|----------|
+| Customer | 03125756192@customer.local | raza123 |
+| Provider | test.provider@test.com | test123 |
+| Admin | admin@test.com | admin123 |
+
+### Stack Band Karne Ke Liye
+
+\`\`\`bash
+sudo docker compose down
+\`\`\`
+
+### Logs Dekhne Ke Liye
+
+\`\`\`bash
+sudo docker compose logs -f
+\`\`\`
 
 ```bash
 git clone git@github.com:Junaid-badshah/ServiceFinder-Web-App.git
