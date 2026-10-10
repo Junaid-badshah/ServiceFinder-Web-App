@@ -1,5 +1,3 @@
-cd ~/Desktop/ServiceFinder
-cat > README.md << 'EOF'
 # ServiceFinder 🔧
 
 A full-stack service booking platform connecting customers with service providers.
@@ -10,12 +8,13 @@ A full-stack service booking platform connecting customers with service provider
 - **Database:** MySQL 8 (Indexed Schema)
 - **Cache:** Redis (TTL: 10 minutes)
 - **Container:** Docker + Docker Compose
+- **CI/CD:** GitHub Actions (auto test, build, publish to GHCR)
 
 ## Features
 
 ### Authentication
 - **Multi-method Signup/Login:**
-  - Phone OTP (demo OTP printed on console for development)
+  - Phone OTP (demo OTP printed on console)
   - Email OTP (real email via Gmail SMTP)
   - Google Sign-In (OAuth2)
 - **Forgot Password:** Reset via Email OTP
@@ -41,6 +40,7 @@ A full-stack service booking platform connecting customers with service provider
 - **Indexed Database Schema** for fast queries
 - **Redis Caching** for provider listings
 - **Docker Compose** for one-command full-stack deployment
+- **CI/CD Pipeline** with GitHub Actions
 - **Backup & Restore** procedures documented
 
 ## Quick Start (Docker Compose) 🚀
